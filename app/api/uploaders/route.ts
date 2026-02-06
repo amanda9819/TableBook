@@ -32,10 +32,29 @@ export async function GET() {
     // Get unique user IDs
     const userIds = [...new Set(restaurants.map((r: { created_by: string }) => r.created_by))];
 
-    // Resolve each user ID to email
+    // Batch-fetch display names from user_profiles
+    const { data: profiles } = await serviceClient
+      .from("user_profiles")
+      .select("id, display_name")
+      .in("id", userIds);
+
+    const profileMap: Record<string, string> = {};
+    if (profiles) {
+      for (const p of profiles as { id: string; display_name: string | null }[]) {
+        if (p.display_name) {
+          profileMap[p.id] = p.display_name;
+        }
+      }
+    }
+
+    // Resolve each user: prefer display_name, fall back to email
     const uploaders: Record<string, string> = {};
 
     for (const uid of userIds) {
+      if (profileMap[uid as string]) {
+        uploaders[uid as string] = profileMap[uid as string];
+        continue;
+      }
       try {
         const { data, error } = await serviceClient.auth.admin.getUserById(uid as string);
         if (error || !data?.user?.email) {

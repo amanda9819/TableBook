@@ -34,3 +34,13 @@ export type RestaurantCuisine = {
   source: string;
   cuisine: Cuisine;
 };
+
+export type UserProfile = {
+  id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  bio: string | null;
+  location: string | null;
+  created_at: string;
+  updated_at: string;
+};

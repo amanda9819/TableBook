@@ -113,6 +113,17 @@ CREATE TABLE user_restaurant_ratings (
   UNIQUE (user_id, restaurant_id)
 );
 
+-- User Profiles: Display names and extensible profile data
+CREATE TABLE user_profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id),
+  display_name TEXT,
+  avatar_url TEXT,
+  bio TEXT,
+  location TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -- ============================================================
 -- INDEXES
 -- ============================================================
@@ -158,6 +169,7 @@ ALTER TABLE lists ENABLE ROW LEVEL SECURITY;
 ALTER TABLE list_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE shares ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_restaurant_ratings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 
 -- ------------------------------------------------------------
 -- Cuisines: Read-only for authenticated users
@@ -327,6 +339,25 @@ CREATE POLICY "Users can delete their own ratings"
   TO authenticated
   USING (user_id = auth.uid());
 
+-- ------------------------------------------------------------
+-- User Profiles: Viewable by all authenticated, editable by owner
+-- ------------------------------------------------------------
+CREATE POLICY "Profiles are viewable by authenticated users"
+  ON user_profiles FOR SELECT
+  TO authenticated
+  USING (true);
+
+CREATE POLICY "Users can insert their own profile"
+  ON user_profiles FOR INSERT
+  TO authenticated
+  WITH CHECK (id = auth.uid());
+
+CREATE POLICY "Users can update their own profile"
+  ON user_profiles FOR UPDATE
+  TO authenticated
+  USING (id = auth.uid())
+  WITH CHECK (id = auth.uid());
+
 -- ============================================================
 -- FUNCTIONS: Auto-update updated_at timestamp
 -- ============================================================
@@ -354,4 +385,8 @@ CREATE TRIGGER update_list_items_updated_at
 
 CREATE TRIGGER update_user_restaurant_ratings_updated_at
   BEFORE UPDATE ON user_restaurant_ratings
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_user_profiles_updated_at
+  BEFORE UPDATE ON user_profiles
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

@@ -55,17 +55,27 @@ export default async function SharedListPage({ params }: Props) {
     );
   }
 
-  // 3) Resolve owner email for display
+  // 3) Resolve owner name for display (prefer display_name, fall back to email)
   let ownerName = "Shared List";
-  try {
-    const { data: ownerData } =
-      await serviceClient.auth.admin.getUserById(list.owner_id);
-    if (ownerData?.user?.email) {
-      const emailName = ownerData.user.email.split("@")[0];
-      ownerName = `${emailName}'s List`;
+  const { data: ownerProfile } = await serviceClient
+    .from("user_profiles")
+    .select("display_name")
+    .eq("id", list.owner_id)
+    .maybeSingle();
+
+  if (ownerProfile?.display_name) {
+    ownerName = `${ownerProfile.display_name}'s List`;
+  } else {
+    try {
+      const { data: ownerData } =
+        await serviceClient.auth.admin.getUserById(list.owner_id);
+      if (ownerData?.user?.email) {
+        const emailName = ownerData.user.email.split("@")[0];
+        ownerName = `${emailName}'s List`;
+      }
+    } catch {
+      // Fall back to generic name
     }
-  } catch {
-    // Fall back to generic name
   }
 
   // 4) Load list items + restaurants

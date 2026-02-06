@@ -13,11 +13,12 @@ import {
   useUpdateCuisines,
 } from "@/hooks/useCuisines";
 import { useMyRatings, useSetRating } from "@/hooks/useRatings";
+import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import { useShare, useCreateShare, useRevokeShare } from "@/hooks/useShare";
 import { signOut } from "@/lib/auth/client";
 import { buildYelpSearchUrl } from "@/lib/yelp/link";
 import { useQueryClient } from "@tanstack/react-query";
-import { ExternalLink, X, Link2, Copy, Trash2 } from "lucide-react";
+import { ExternalLink, X, Link2, Copy, Trash2, Pencil, Check } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
@@ -57,12 +58,16 @@ export default function Home() {
   const removeFromList = useRemoveFromList();
   const { data: myRatings = {} } = useMyRatings(userId);
   const setRating = useSetRating();
+  const { data: profile } = useProfile();
+  const updateProfile = useUpdateProfile();
 
   // Share queries
   const { data: activeShare } = useShare();
   const createShare = useCreateShare();
   const revokeShare = useRevokeShare();
   const [copied, setCopied] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editNameValue, setEditNameValue] = useState("");
 
   // Cuisine queries
   const { data: allCuisines = [] } = useCuisines();
@@ -283,9 +288,53 @@ export default function Home() {
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold">Table Book</h1>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground truncate max-w-[140px]">
-            {email}
-          </span>
+          {isEditingName ? (
+            <form
+              className="flex items-center gap-1"
+              onSubmit={(e) => {
+                e.preventDefault();
+                updateProfile.mutate(editNameValue, {
+                  onSuccess: () => setIsEditingName(false),
+                });
+              }}
+            >
+              <input
+                type="text"
+                value={editNameValue}
+                onChange={(e) => setEditNameValue(e.target.value)}
+                maxLength={50}
+                placeholder="Display name"
+                className="w-[120px] rounded border border-input bg-background px-1.5 py-0.5 text-xs"
+                autoFocus
+              />
+              <button
+                type="submit"
+                disabled={updateProfile.isPending}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <Check className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsEditingName(false)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </form>
+          ) : (
+            <button
+              onClick={() => {
+                setEditNameValue(profile?.display_name ?? "");
+                setIsEditingName(true);
+              }}
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground truncate max-w-[140px]"
+              title="Edit display name"
+            >
+              {profile?.display_name ?? email}
+              <Pencil className="h-3 w-3 shrink-0" />
+            </button>
+          )}
           <Button onClick={handleSignOut} variant="ghost" size="sm">
             Sign out
           </Button>
