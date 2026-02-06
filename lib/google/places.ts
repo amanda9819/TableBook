@@ -151,7 +151,7 @@ export async function getPlaceDetails(
  */
 export async function extractPlaceIdFromUrl(
   url: string
-): Promise<string | null> {
+): Promise<{ placeId: string | null; resolvedUrl: string }> {
   // Handle short URLs by following redirects
   if (url.includes("goo.gl") || url.includes("maps.app.goo.gl")) {
     try {
@@ -162,7 +162,7 @@ export async function extractPlaceIdFromUrl(
       url = response.url;
     } catch (error) {
       console.error("Error following redirect:", error);
-      return null;
+      return { placeId: null, resolvedUrl: url };
     }
   }
 
@@ -171,14 +171,14 @@ export async function extractPlaceIdFromUrl(
   const urlObj = new URL(url);
   const placeIdParam = urlObj.searchParams.get("place_id");
   if (placeIdParam) {
-    return placeIdParam;
+    return { placeId: placeIdParam, resolvedUrl: url };
   }
 
   // Try to extract from /place/ path with data parameter
   // Format: /maps/place/Name/@lat,lng,zoom/data=...!1s<place_id>...
   const dataMatch = url.match(/!1s(ChIJ[^!]+)/);
   if (dataMatch) {
-    return decodeURIComponent(dataMatch[1]);
+    return { placeId: decodeURIComponent(dataMatch[1]), resolvedUrl: url };
   }
 
   // Try to extract from ftid parameter
@@ -187,17 +187,17 @@ export async function extractPlaceIdFromUrl(
   if (ftidMatch) {
     // ftid needs to be converted to place_id via API
     // For now, return null and let text search handle it
-    return null;
+    return { placeId: null, resolvedUrl: url };
   }
 
   // Try CID format (numeric ID)
   const cidMatch = url.match(/cid=(\d+)/);
   if (cidMatch) {
     // CID needs special handling, skip for now
-    return null;
+    return { placeId: null, resolvedUrl: url };
   }
 
-  return null;
+  return { placeId: null, resolvedUrl: url };
 }
 
 /**

@@ -68,7 +68,7 @@ export async function POST(request: Request) {
       source = "url";
 
       // Try to extract Place ID from URL
-      const placeId = await extractPlaceIdFromUrl(trimmedQuery);
+      const { placeId, resolvedUrl } = await extractPlaceIdFromUrl(trimmedQuery);
 
       if (placeId) {
         // Get place details directly
@@ -78,9 +78,9 @@ export async function POST(request: Request) {
         }
       }
 
-      // Fallback: extract name from URL and do text search
+      // Fallback: extract name from the resolved (redirected) URL and do text search
       if (candidates.length === 0) {
-        const placeName = extractPlaceNameFromUrl(trimmedQuery);
+        const placeName = extractPlaceNameFromUrl(resolvedUrl);
         if (placeName) {
           candidates = await textSearch(placeName);
           source = "text_search";
