@@ -25,7 +25,7 @@ type RestaurantCardProps = {
   onToggleStatus?: () => void;
   // Rating (My List only)
   userRating?: number;
-  onRate?: (rating: number) => void;
+  onRate?: (rating: number | null) => void;
 };
 
 export function RestaurantCard({
@@ -152,7 +152,7 @@ export function RestaurantCard({
           {[1, 2, 3, 4, 5].map((star) => (
             <button
               key={star}
-              onClick={() => onRate(star)}
+              onClick={() => onRate(userRating === star ? null : star)}
               className="p-0"
             >
               <Star

@@ -96,3 +96,48 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ rating: upserted });
 }
+
+export async function DELETE(request: Request) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  let body: { restaurantId: string };
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  const { restaurantId } = body;
+
+  if (!restaurantId || typeof restaurantId !== "string") {
+    return NextResponse.json(
+      { error: "restaurantId is required" },
+      { status: 400 }
+    );
+  }
+
+  // RLS enforces user_id = auth.uid() for DELETE
+  const { error: deleteError } = await supabase
+    .from("user_restaurant_ratings")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("restaurant_id", restaurantId);
+
+  if (deleteError) {
+    console.error("Error deleting rating:", deleteError);
+    return NextResponse.json(
+      { error: "Failed to delete rating" },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({ ok: true });
+}

@@ -39,8 +39,23 @@ export function useSetRating() {
       rating,
     }: {
       restaurantId: string;
-      rating: number;
+      rating: number | null;
     }) => {
+      if (rating === null) {
+        const res = await fetch("/api/ratings", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ restaurantId }),
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || "Failed to delete rating");
+        }
+
+        return res.json();
+      }
+
       const res = await fetch("/api/ratings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

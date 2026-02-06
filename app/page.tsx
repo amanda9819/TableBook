@@ -72,6 +72,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState("all");
   const [uploaderFilter, setUploaderFilter] = useState<string>("all");
   const [cuisineFilter, setCuisineFilter] = useState<string>("all");
+  const [myListCuisineFilter, setMyListCuisineFilter] = useState<string>("all");
 
   // Cuisine edit modal state
   const [editingRestaurantId, setEditingRestaurantId] = useState<string | null>(
@@ -100,6 +101,14 @@ export default function Home() {
     () => [...new Set(restaurants.map((r) => r.created_by))],
     [restaurants]
   );
+
+  const filteredMyListItems = useMemo(() => {
+    if (myListCuisineFilter === "all") return myListItems;
+    return myListItems.filter((item) => {
+      const cuisines = restaurantCuisinesMap[item.restaurant_id];
+      return cuisines?.some((c) => c.id === myListCuisineFilter);
+    });
+  }, [myListItems, myListCuisineFilter, restaurantCuisinesMap]);
 
   const filteredRestaurants = useMemo(() => {
     let filtered = restaurants;
@@ -314,9 +323,22 @@ export default function Home() {
           {/* Search results */}
           {candidates.length > 0 && (
             <div className="space-y-2 rounded-lg border border-dashed border-border p-3">
-              <p className="text-xs font-medium text-muted-foreground">
-                Search results ({candidates.length})
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-medium text-muted-foreground">
+                  Search results ({candidates.length})
+                </p>
+                <button
+                  onClick={() => {
+                    setCandidates([]);
+                    setImportStates({});
+                    setResolveStatus("idle");
+                    setQuery("");
+                  }}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
               {candidates.map((c) => {
                 const importState = importStates[c.google_place_id];
                 const isImported = importState?.status === "done";
@@ -528,6 +550,22 @@ export default function Home() {
             )}
           </div>
 
+          {/* Cuisine filter for My List */}
+          {allCuisines.length > 0 && myListItems.length > 0 && (
+            <select
+              value={myListCuisineFilter}
+              onChange={(e) => setMyListCuisineFilter(e.target.value)}
+              className="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+            >
+              <option value="all">All cuisines</option>
+              {allCuisines.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          )}
+
           {myListLoading ? (
             <p className="text-sm text-muted-foreground text-center py-4">
               Loading your list...
@@ -548,8 +586,12 @@ export default function Home() {
                 to add some!
               </p>
             </div>
+          ) : filteredMyListItems.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              No restaurants match this cuisine.
+            </p>
           ) : (
-            myListItems.map((item) => {
+            filteredMyListItems.map((item) => {
               const isOwner = item.restaurant.created_by === userId;
               return (
                 <RestaurantCard
