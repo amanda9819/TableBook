@@ -384,30 +384,22 @@ export default function Home() {
                         </span>
                       )}
 
-                      {isImported && importState.yelpUrl ? (
-                        <a
-                          href={importState.yelpUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-0.5 text-xs text-blue-600 hover:underline"
-                        >
-                          Yelp <ExternalLink className="h-3 w-3" />
-                        </a>
-                      ) : (
-                        !isImported && (
-                          <a
-                            href={buildYelpSearchUrl(
-                              c.name,
-                              c.formatted_address
-                            )}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-0.5 text-xs text-blue-500 hover:underline"
-                          >
-                            Yelp <ExternalLink className="h-3 w-3" />
-                          </a>
-                        )
-                      )}
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.name + " " + c.formatted_address)}&query_place_id=${encodeURIComponent(c.google_place_id)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-0.5 text-xs text-blue-600 hover:underline ml-auto"
+                      >
+                        Maps <ExternalLink className="h-3 w-3" />
+                      </a>
+                      <a
+                        href={buildYelpSearchUrl(c.name, c.formatted_address)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-0.5 text-xs text-blue-600 hover:underline"
+                      >
+                        Yelp <ExternalLink className="h-3 w-3" />
+                      </a>
                     </div>
                   </div>
                 );
