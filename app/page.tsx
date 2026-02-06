@@ -5,7 +5,7 @@ import { RestaurantCard } from "@/components/restaurant-card";
 import { TabBar } from "@/components/tab-bar";
 import { useAuth } from "@/hooks/useAuth";
 import { useBootstrap } from "@/hooks/useBootstrap";
-import { useMyList, useToggleStatus } from "@/hooks/useMyList";
+import { useMyList, useToggleStatus, useRemoveFromList } from "@/hooks/useMyList";
 import { useRestaurants, useUploaders } from "@/hooks/useRestaurants";
 import {
   useCuisines,
@@ -54,6 +54,7 @@ export default function Home() {
   const { data: myListItems = [], isLoading: myListLoading } =
     useMyList(listId);
   const toggleStatus = useToggleStatus();
+  const removeFromList = useRemoveFromList();
   const { data: myRatings = {} } = useMyRatings(userId);
   const setRating = useSetRating();
 
@@ -621,6 +622,11 @@ export default function Home() {
                       restaurantId: item.restaurant_id,
                       rating,
                     })
+                  }
+                  onRemove={() => removeFromList.mutate(item.id)}
+                  isRemoving={
+                    removeFromList.isPending &&
+                    removeFromList.variables === item.id
                   }
                 />
               );

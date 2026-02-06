@@ -9,9 +9,10 @@ export function useRestaurants() {
     queryKey: ["restaurants"],
     queryFn: async () => {
       const supabase = createClient();
+      // Only show restaurants that are in at least one user's list
       const { data, error } = await supabase
         .from("restaurants")
-        .select("id, created_by, name, address, google_place_id, google_rating, google_review_count, created_at")
+        .select("id, created_by, name, address, google_place_id, google_rating, google_review_count, created_at, list_items!inner(id)")
         .order("created_at", { ascending: false });
 
       if (error) throw error;

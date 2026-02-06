@@ -3,7 +3,7 @@
 import { buildYelpSearchUrl } from "@/lib/yelp/link";
 import { cn } from "@/lib/utils";
 import type { Cuisine } from "@/lib/types";
-import { Star, ExternalLink, Plus, Check, Pencil } from "lucide-react";
+import { Star, ExternalLink, Plus, Check, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type RestaurantCardProps = {
@@ -26,6 +26,8 @@ type RestaurantCardProps = {
   // Rating (My List only)
   userRating?: number;
   onRate?: (rating: number | null) => void;
+  onRemove?: () => void;
+  isRemoving?: boolean;
 };
 
 export function RestaurantCard({
@@ -45,6 +47,8 @@ export function RestaurantCard({
   onToggleStatus,
   userRating,
   onRate,
+  onRemove,
+  isRemoving,
 }: RestaurantCardProps) {
   const yelpUrl = buildYelpSearchUrl(name, address);
   const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name + " " + address)}&query_place_id=${encodeURIComponent(googlePlaceId)}`;
@@ -187,6 +191,18 @@ export function RestaurantCard({
           <Check className="h-3 w-3" />
           In your list
         </div>
+      )}
+
+      {/* Remove from My List button */}
+      {onRemove && (
+        <button
+          onClick={onRemove}
+          disabled={isRemoving}
+          className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-destructive transition-colors disabled:opacity-50"
+        >
+          <Trash2 className="h-2.5 w-2.5" />
+          {isRemoving ? "Removing..." : "Remove from list"}
+        </button>
       )}
     </div>
   );

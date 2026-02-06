@@ -50,3 +50,22 @@ export function useToggleStatus() {
     },
   });
 }
+
+export function useRemoveFromList() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (listItemId: string) => {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("list_items")
+        .delete()
+        .eq("id", listItemId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["myList"] });
+    },
+  });
+}
